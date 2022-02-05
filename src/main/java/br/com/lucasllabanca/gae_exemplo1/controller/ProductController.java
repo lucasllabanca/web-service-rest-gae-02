@@ -62,7 +62,7 @@ public class ProductController {
 
         DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
 
-        if (!checkIfCodeExist(product)) {
+        if (!checkIfCodeExist(product, product.getCode())) {
             Key productKey = KeyFactory.createKey("Products", "productKey");
             Entity productEntity = new Entity("Products", productKey);
 
@@ -105,7 +105,7 @@ public class ProductController {
         if (product.getId() == 0)
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-        if (!checkIfCodeExist(product)) {
+        if (!checkIfCodeExist(product, code)) {
 
             DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
 
@@ -188,7 +188,7 @@ public class ProductController {
         return product;
     }
 
-    private boolean checkIfCodeExist(Product product) {
+    private boolean checkIfCodeExist(Product product, int code) {
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Query.Filter codeFilter = new Query.FilterPredicate("Code", Query.FilterOperator.EQUAL, product.getCode());
@@ -198,7 +198,7 @@ public class ProductController {
         if (productEntity == null) {
             return false;
         } else {
-            if (productEntity.getKey().getId() == product.getId()) {
+            if (productEntity.getKey().getId() == product.getId() && product.getCode() == code) {
                 return false;
             } else {
                 return true;
