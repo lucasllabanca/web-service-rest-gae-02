@@ -24,8 +24,14 @@ public class UserRepository {
     //this annotation finds in the project the class that implements PasswordEncoder
     //Not needed to create an instance, it creates by itself
     //It works 'cause of @Configuration plus @Bean
-    @Autowired
     private PasswordEncoder passwordEncoder;
+    private DatastoreService datastoreService;
+
+    @Autowired
+    public UserRepository(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+        this.datastoreService = DatastoreServiceFactory.getDatastoreService();
+    }
 
     private static final String USER_KIND = "users";
     private static final String USER_KEY = "userKey";
@@ -69,11 +75,7 @@ public class UserRepository {
     public Optional<User> getByEmail (String email) {
         log.info("Get user by email: " + email);
 
-        DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
-
-        Query.Filter filter = new Query.FilterPredicate(PROPERTY_EMAIL, Query.FilterOperator.EQUAL, email);
-        Query query = new Query(USER_KIND).setFilter(filter);
-        Entity userEntity = datastoreService.prepare(query).asSingleEntity();
+        Entity userEntity = getUserEntityByEmail(email);
 
         if (userEntity != null) {
             return Optional.of(entityToUser(userEntity));
@@ -84,8 +86,6 @@ public class UserRepository {
 
     public List<User> getUsers() {
         List<User> users = new ArrayList<>();
-        DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
-
         Query query = new Query(USER_KIND).addSort(PROPERTY_EMAIL, Query.SortDirection.ASCENDING);
 
         List<Entity> userEntities = datastoreService.prepare(query).asList(FetchOptions.Builder.withDefaults());
@@ -99,11 +99,8 @@ public class UserRepository {
     }
 
     public User deleteUser(String email) throws UserNotFoundException {
-        DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
 
-        Query.Filter filter = new Query.FilterPredicate(PROPERTY_EMAIL, Query.FilterOperator.EQUAL, email);
-        Query query = new Query(USER_KIND).setFilter(filter);
-        Entity userEntity = datastoreService.prepare(query).asSingleEntity();
+        Entity userEntity = getUserEntityByEmail(email);
 
         if (userEntity != null) {
             datastoreService.delete(userEntity.getKey());
@@ -114,7 +111,6 @@ public class UserRepository {
     }
 
     public User saveUser(User user) throws UserAlreadyExistsException {
-        DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
 
         if (!checkIfEmailExist(user)) {
             Key userKey = KeyFactory.createKey(USER_KIND, USER_KEY);
@@ -136,11 +132,7 @@ public class UserRepository {
 
         if (!checkIfEmailExist(user)) {
 
-            DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
-
-            Query.Filter filter = new Query.FilterPredicate(PROPERTY_EMAIL, Query.FilterOperator.EQUAL, email);
-            Query query = new Query(USER_KIND).setFilter(filter);
-            Entity userEntity = datastoreService.prepare(query).asSingleEntity();
+            Entity userEntity = getUserEntityByEmail(email);
 
             if (userEntity != null) {
                 userToEntity(user, userEntity, false);
@@ -158,11 +150,8 @@ public class UserRepository {
     }
 
     private boolean checkIfEmailExist (User user) {
-        DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
 
-        Query.Filter filter = new Query.FilterPredicate(PROPERTY_EMAIL, Query.FilterOperator.EQUAL, user.getEmail());
-        Query query = new Query(USER_KIND).setFilter(filter);
-        Entity userEntity = datastoreService.prepare(query).asSingleEntity();
+        Entity userEntity = getUserEntityByEmail(user.getEmail());
 
         if (userEntity == null) {
             return false;
@@ -173,6 +162,12 @@ public class UserRepository {
                 return userEntity.getKey().getId() != user.getId();
             }
         }
+    }
+
+    private Entity getUserEntityByEmail(String email) {
+        Query.Filter filter = new Query.FilterPredicate(PROPERTY_EMAIL, Query.FilterOperator.EQUAL, email);
+        Query query = new Query(USER_KIND).setFilter(filter);
+        return datastoreService.prepare(query).asSingleEntity();
     }
 
     private void userToEntity (User user, Entity userEntity, boolean updatePassword) {
