@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping(path = "/api/products")
 public class ProductController {
+
+    private static final Logger log = Logger.getLogger(ProductController.class.getName());
 
     @GetMapping("/{code}")
     public ResponseEntity<Product> getProduct(@PathVariable int code) {
@@ -84,6 +87,8 @@ public class ProductController {
 
         DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
 
+        log.fine("Tentando apagar produto com código=[" + code + "]");
+
         Query.Filter codeFilter = new Query.FilterPredicate("Code", Query.FilterOperator.EQUAL, code);
 
         Query query = new Query("Products").setFilter(codeFilter);
@@ -93,8 +98,11 @@ public class ProductController {
         if (entity != null) {
             datastoreService.delete(entity.getKey());
             Product product = entityToProduct(entity);
+
+            log.info("Producto com código=[" + code + "] apagado com sucesso");
             return new ResponseEntity<Product>(product, HttpStatus.OK);
         } else {
+            log.severe("Erro ao apagar produto com código=[" + code + "]. Produto não encontrado");
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
