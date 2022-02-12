@@ -4,6 +4,7 @@ import br.com.lucasllabanca.gae_exemplo1.model.Product;
 import com.google.appengine.api.datastore.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ public class ProductController {
     private static final Logger log = Logger.getLogger(ProductController.class.getName());
 
     @GetMapping("/{code}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Product> getProduct(@PathVariable int code) {
         //Product product = createProduct(code);
 
@@ -37,6 +39,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<List<Product>> getProducts() {
 
         List<Product> products = new ArrayList<>();
@@ -60,6 +63,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Product> saveProduct(@RequestBody Product product) {
         //product.setProductId(Integer.toString(product.getCode()));
 
@@ -82,6 +86,7 @@ public class ProductController {
     }
 
     @DeleteMapping(path = "/{code}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Product> deleteProduct(@PathVariable("code") int code) {
         //Product product = createProduct(code);
 
@@ -108,6 +113,7 @@ public class ProductController {
     }
 
     @PutMapping(path = "/{code}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Product> updateProduct(@PathVariable("code") int code, @RequestBody Product product) {
 
         if (product.getId() == 0)

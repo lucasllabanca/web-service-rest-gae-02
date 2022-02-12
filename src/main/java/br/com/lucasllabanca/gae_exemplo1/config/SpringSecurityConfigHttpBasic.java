@@ -33,6 +33,7 @@ public class SpringSecurityConfigHttpBasic extends WebSecurityConfigurerAdapter 
         InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
         manager.createUser(users.username("user").password("user").roles("USER").build());
         manager.createUser(users.username("admin").password("admin").roles("ADMIN").build());
+        manager.createUser(users.username("audit").password("audit").roles("AUDIT").build());
 
         return manager;
     }
