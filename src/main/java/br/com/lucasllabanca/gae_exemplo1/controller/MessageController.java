@@ -11,6 +11,7 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Query;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
@@ -48,6 +49,7 @@ public class MessageController {
                     .setCredentials(GoogleCredentials.getApplicationDefault())
                     .setDatabaseUrl("https://gae-exemplo1-aula.firebaseio.com")
                     .build();
+            FirebaseApp.initializeApp(options);
             log.info("FirebaseApp inicializado com sucesso!");
         } catch (IOException e) {
             log.info("Falha ao configurar FirebaseApp");
@@ -57,7 +59,7 @@ public class MessageController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(path = "/sendproduct")
     public ResponseEntity<String> sendProduct(@RequestParam("email") String email,
-                                              @RequestParam("ProductCode") int productCode) {
+                                              @RequestParam("productCode") int productCode) {
 
         Optional<User> optUser = userRepository.getByEmail(email);
 
